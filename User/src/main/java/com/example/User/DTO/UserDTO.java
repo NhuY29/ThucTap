@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.Set;
 import java.util.UUID;
 
 @Getter
@@ -18,4 +19,6 @@ public class UserDTO {
     private String firstname;
     private String lastname;
     private LocalDate dob;
+    private UUID imageId;
+    private String roles;
 }

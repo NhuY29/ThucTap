@@ -3,6 +3,8 @@ package com.example.User.Entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.UUID;
+
 @Entity
 @Table(name = "image")
 @Getter
@@ -12,16 +14,7 @@ import lombok.*;
 @Builder
 public class ImageEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "idImage")
-    private long idImage;
-
-    @Column(name = "nameImage")
-    private String nameImage;
-
-    @Column(name = "type")
-    private String type;
-
-    @Column(name = "imageUrl")
-    private String imageUrl;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
+    private String url;
 }

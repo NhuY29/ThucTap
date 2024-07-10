@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.UUID;
@@ -23,4 +24,6 @@ public class UserRequest {
     private String firstname;
     private String lastname;
     private LocalDate dob;
+    MultipartFile imageUrl;
+    private  String roles;
 }

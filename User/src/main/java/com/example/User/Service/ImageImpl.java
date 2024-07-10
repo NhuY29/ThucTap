@@ -3,64 +3,74 @@ package com.example.User.Service;
 import com.example.User.Entity.ImageEntity;
 import com.example.User.Reponsitory.ImageRepositories;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Component;
 
-import java.io.File;
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.UUID;
 
-@Service
+@Component
 public class ImageImpl implements ImageService {
+
     @Autowired
-    private ImageRepositories imageRepositories;
-
-    private final String folder = "D:/ThucTap/MyFile/";
-
+    private ImageRepositories imageRepository;
+//    @PreAuthorize("hasAuthority('SCOPE_ADMIN')")
     @Override
-    public String uploadImage(MultipartFile file) throws IOException {
-        String fileName = folder + file.getOriginalFilename();
-        file.transferTo(new File(fileName));
+    public ResponseEntity<byte[]> getImageByIdWithSize(UUID imageId, int width, int height) {
+        Optional<ImageEntity> imageOptional = imageRepository.findById(imageId);
+        if (imageOptional.isPresent()) {
+            ImageEntity image = imageOptional.get();
 
-        ImageEntity imageEntity = imageRepositories.save(ImageEntity.builder()
-                .nameImage(file.getOriginalFilename())
-                .type(file.getContentType())
-                .imageUrl(fileName)
-                .build());
+            byte[] imageData = loadImageData(image.getUrl());
+            byte[] resizedImageData = resizeImage(imageData, width, height);
 
-        if (imageEntity != null) {
-            return "File uploaded successfully: " + fileName;
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.IMAGE_JPEG);
+
+            return ResponseEntity.ok().headers(headers).body(resizedImageData);
         }
-        return "File upload failed";
+        return ResponseEntity.notFound().build();
     }
 
-
-    @Override
-    public Optional<ImageEntity> getImageEntity(Long id) {
-        return imageRepositories.findById(id);
+    private byte[] loadImageData(String imageUrl) {
+        try {
+            Path imagePath = Paths.get(imageUrl);
+            return Files.readAllBytes(imagePath);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return new byte[0];
+        }
     }
 
-    @Override
-    public ResponseEntity<ByteArrayResource> getFileResponse(Long id) throws IOException {
-        Optional<ImageEntity> imageEntityOptional = getImageEntity(id);
-        if (imageEntityOptional.isPresent()) {
-            ImageEntity imageEntity = imageEntityOptional.get();
-            File file = new File(imageEntity.getImageUrl());
-            Path path = Paths.get(file.getAbsolutePath());
-            ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));
-            return ResponseEntity.ok()
-                    .contentLength(file.length())
-                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .body(resource);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    private byte[] resizeImage(byte[] imageData, int width, int height) {
+        try {
+            BufferedImage originalImage = ImageIO.read(new java.io.ByteArrayInputStream(imageData));
+            BufferedImage resizedImage = new BufferedImage(width, height, originalImage.getType());
+            Graphics2D g = resizedImage.createGraphics();
+            g.drawImage(originalImage, 0, 0, width, height, null);
+            g.dispose();
 
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(resizedImage, "jpg", baos);
+            baos.flush();
+            byte[] resizedImageData = baos.toByteArray();
+            baos.close();
+
+            return resizedImageData;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return new byte[0];
+        }
     }
 }

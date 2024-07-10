@@ -2,12 +2,10 @@ package com.example.User.Entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDate;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -16,6 +14,7 @@ import java.util.UUID;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class UserEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -38,6 +37,15 @@ public class UserEntity {
     @Column(name = "dob")
     private LocalDate dob;
 
+    @Column(name = "imageId")
+    private UUID imageId;
+
+    @Column(name="roles")
+    private String roles;
+
+
+
     @Column(name = "deleted", nullable = false)
     private boolean deleted = false;
+
 }
